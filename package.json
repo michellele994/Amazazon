@@ -1,0 +1,24 @@
+{
+  "name": "amazingamazon",
+  "version": "1.0.0",
+  "description": "amazing things on amazazon",
+  "main": "mamazonCustomer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/michellele994/Mamazon.git"
+  },
+  "author": "Michelle Le",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/michellele994/Mamazon/issues"
+  },
+  "homepage": "https://github.com/michellele994/Mamazon#readme",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "inquirer": "^5.0.1",
+    "mysql": "^2.15.0"
+  }
+}
