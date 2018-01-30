@@ -14,14 +14,13 @@ connection.connect(function(err) {
 	console.log("Howdy, boss!\n");
 	ask();
 });
-
 function ask() 
 {
 	inquirer.prompt([
 	{
 		type: "list",
 		name: "action",
-		message: "What is it that you would like to do today?",
+		message: "What would you like to do?",
 		choices: ["View Products for Sale","View Low Inventory","Add to Inventory", "Add New Product", "Exit"]
 	},
 	{
@@ -82,12 +81,12 @@ function ask()
 		if(answer.action === "View Products for Sale")
 		{
 			readProducts();
-			ask();
+			setTimeout(function(){ask()}, 500);
 		}
 		else if(answer.action === "View Low Inventory")
 		{
 			showLowInventory();
-			ask();
+			setTimeout(function(){ask()}, 500);
 		}
 		else if(answer.action === "Add to Inventory")
 		{
@@ -99,6 +98,7 @@ function ask()
 				if(doesIDExist(answer.selectToAdd) && answer.amountToAdd > 0 )
 				{
 					addToInventory(answer.amountToAdd, answer.selectToAdd);
+					setTimeout(function(){ask()}, 500);
 				}
 				else if(!doesIDExist(answer.selectToAdd))
 				{
@@ -125,12 +125,12 @@ function ask()
 				else if(!doesIDExist(answer.newID) && answer.price >= 0)
 				{
 					addNewProduct(answer.newID, answer.prodName, answer.depName, answer.price, answer.amountToAdd);
+					setTimeout(function(){ask()}, 500);
 				}
 			},500);
 		}
 	});
 }
-
 function readProducts()
 {
 	console.log("Selecting all products...\n");
@@ -140,7 +140,6 @@ function readProducts()
 		console.table(results);
 	});
 }
-
 function showLowInventory()
 {
 	console.log("Showing low inventory");
@@ -163,9 +162,9 @@ function addToInventory(amount, product)
 	],
 		function(err, res) {
 			console.log("Items have been added!");
+
 		}
 	);
-
 }
 function addNewProduct(id, prod_name, dep_name, price, quantity)
 {
@@ -177,7 +176,8 @@ function addNewProduct(id, prod_name, dep_name, price, quantity)
 			product_name: prod_name,
 			department_name: dep_name,
 			price: price,
-			stock_quantity: quantity
+			stock_quantity: quantity,
+			product_sales : 0
 		},
 		function(err, res) {
 			console.log("New item has been added!!! Click View All Products to see it!")
@@ -190,7 +190,6 @@ function doesIDExist(id)
 	{
 		if(id == results[i].item_id)
 		{
-			// location = i;
 			return true;
 			break;
 		}

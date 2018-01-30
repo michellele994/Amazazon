@@ -39,10 +39,6 @@ function ask()
 					if (answer.quantity <= results[location].stock_quantity)
 					{
 						updateProducts(answer.id, location, answer.quantity)
-						console.log("You got it! Your total purchase was $" + (results[location].price*answer.quantity) + " dollars");
-						setTimeout(function() {
-						connection.end();
-						},500);
 					}
 					else
 					{
@@ -92,11 +88,8 @@ function updateProducts(itemID, locInArray, changeInQuantity)
 {
 	console.log("Processing you request...\n");
 	var query = connection.query(
-		"UPDATE products SET ? WHERE ?",
+		"UPDATE products SET stock_quantity = stock_quantity-"+changeInQuantity+" WHERE ?",
 		[
-			{
-				stock_quantity: results[locInArray].stock_quantity-changeInQuantity
-			},
 			{
 				item_id: itemID
 			}
@@ -106,9 +99,21 @@ function updateProducts(itemID, locInArray, changeInQuantity)
 				if (err) throw err;
 				results = res;
 			});
+			console.log("You got it! Your total purchase was $" + (results[locInArray].price*changeInQuantity) + " dollars");
 			console.log("Thank you for shopping with Mamazon!");
 		}
 	);
+	var query = connection.query(
+		"UPDATE products SET product_sales = product_sales+"+results[locInArray].price*changeInQuantity+" WHERE ?",
+		[{
+			item_id: itemID
+		}],
+		function(err, res){
+			connection.query("SELECT * FROM products", function(err, res) {
+				if (err) throw err;
+				results = res;
+			});
+		})
 }
 function readProducts(type) {
 	console.log("Selecting all products...\n");
