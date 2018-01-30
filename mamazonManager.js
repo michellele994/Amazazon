@@ -2,7 +2,6 @@ var inquirer = require("inquirer");
 var consoleTable = require("console.table");
 var mysql = require("mysql");
 var results;
-var choiceMade = false;
 var connection = mysql.createConnection({
 	host: "localhost",
 	port: 3306,
@@ -23,11 +22,7 @@ function ask()
 				type: "list",
 				name: "action",
 				message: "What is it that you would like to do today?",
-				choices: ["View Products for Sale","View Low Inventory","Add to Inventory", "Add New Product", "Exit"],
-				when: function()
-				{
-					return !choiceMade;
-				}
+				choices: ["View Products for Sale","View Low Inventory","Add to Inventory", "Add New Product", "Exit"]
 			},
 			{
 				type: "input",
@@ -44,32 +39,31 @@ function ask()
 				message: "How much would you like to add?",
 				when: function(answer)
 				{
-					return (doesIDExist(answer.selectToAdd));
+					return (answer.action === "Add to Inventory");
 				}
 			}
 		]).then(function(answer) {
 			if(answer.action === "View Products for Sale")
 			{
-				choiceMade = true;
 				readProducts();
 				ask();
-				choiceMade = false;
 			}
 			else if(answer.action === "View Low Inventory")
 			{
-				choiceMade = true;
 				showLowInventory();
 				ask();
-				choiceMade = false;
 			}
-			else if(answer.action === "Add to Inventory")
+			else if(answer.action === "Add to Inventory" && answer.amountToAdd > 0 )
 			{
-				choiceMade = true;
-				if (doesIDExist(answer.selectToAdd))
-				{
-					console.log("Function works!")
-				}
+				connection.query("SELECT * FROM products", function(err, res) {
+					if (err) throw err;
+					results = res;
+				});
+				setTimeout(function(){
+					console.log(doesIDExist(answer.selectToAdd));
+				},500);
 			}
+				
 		});
 }
 
@@ -109,24 +103,19 @@ function addToInventory(amount, product)
 		function(err, res) {
 			console.log(res.affectedRows + " products updated!\n");
 			// Call deleteProduct AFTER the UPDATE completes
-			deleteProduct();
 		}
 	);
 
 }
 function doesIDExist(id)
 {
-	connection.query("SELECT * FROM products", function(err, res) {
-		if (err) throw err;
-		results = res;
-		for (var i = 0; i < results.length; i++)
+	for (var i = 0; i < results.length; i++)
+	{
+		if(id == results[i].item_id)
 		{
-			if(id == results[i].item_id)
-			{
-				// location = i;
-				return true;
-				break;
-			}
+			// location = i;
+			return true;
+			break;
 		}
-	});
+	}
 }
