@@ -18,53 +18,70 @@ connection.connect(function(err) {
 function ask() 
 {
 	inquirer.prompt([
-			{
-				type: "list",
-				name: "action",
-				message: "What is it that you would like to do today?",
-				choices: ["View Products for Sale","View Low Inventory","Add to Inventory", "Add New Product", "Exit"]
-			},
-			{
-				type: "input",
-				name: "selectToAdd",
-				message: "Type the item ID of the item you wish to update.",
-				when: function(answer)
+	{
+		type: "list",
+		name: "action",
+		message: "What is it that you would like to do today?",
+		choices: ["View Products for Sale","View Low Inventory","Add to Inventory", "Add New Product", "Exit"]
+	},
+	{
+		type: "input",
+		name: "selectToAdd",
+		message: "Type the item ID of the item you wish to update.",
+		when: function(answer)
+		{
+			return answer.action === "Add to Inventory";
+		}
+	},
+	{
+		type: "input",
+		name: "amountToAdd",
+		message: "How much would you like to add?",
+		when: function(answer)
+		{
+			return (answer.action === "Add to Inventory");
+		}
+	}
+	]).then(function(answer) {
+		if(answer.action === "View Products for Sale")
+		{
+			readProducts();
+			ask();
+		}
+		else if(answer.action === "View Low Inventory")
+		{
+			showLowInventory();
+			ask();
+		}
+		else if(answer.action === "Add to Inventory")
+		{
+			connection.query("SELECT * FROM products", function(err, res) {
+				if (err) throw err;
+				results = res;
+			});
+			setTimeout(function(){
+				if(doesIDExist(answer.selectToAdd) && answer.amountToAdd > 0 )
 				{
-					return answer.action === "Add to Inventory";
+					addToInventory(answer.amountToAdd, answer.selectToAdd);
 				}
-			},
-			{
-				type: "input",
-				name: "amountToAdd",
-				message: "How much would you like to add?",
-				when: function(answer)
+				else if(!doesIDExist(answer.selectToAdd))
 				{
-					return (answer.action === "Add to Inventory");
+					console.log("That item ID currently does not exist. Click 'Add New Product' if you want to add something that doesn't currently exist");
 				}
-			}
-		]).then(function(answer) {
-			if(answer.action === "View Products for Sale")
-			{
-				readProducts();
-				ask();
-			}
-			else if(answer.action === "View Low Inventory")
-			{
-				showLowInventory();
-				ask();
-			}
-			else if(answer.action === "Add to Inventory" && answer.amountToAdd > 0 )
-			{
-				connection.query("SELECT * FROM products", function(err, res) {
-					if (err) throw err;
-					results = res;
-				});
-				setTimeout(function(){
-					console.log(doesIDExist(answer.selectToAdd));
-				},500);
-			}
-				
-		});
+				else if (answer.amountToAdd <= 0)
+				{
+					console.log("Please enter an amount that is greater than 0");
+				}
+			},500);
+
+
+		}
+		else if(answer.action === "Add New Product")
+		{
+
+		}
+			
+	});
 }
 
 function readProducts()
@@ -91,18 +108,14 @@ function addToInventory(amount, product)
 {
 	console.log("Adding to inventory");
 	var query = connection.query(
-	"UPDATE products SET ? WHERE ?",
+	"UPDATE products SET stock_quantity = stock_quantity +" +amount+"  WHERE ?",
 	[
 		{
-			quantity: 100
-		},
-		{
-			flavor: "Rocky Road"
+			item_id: product
 		}
 	],
 		function(err, res) {
-			console.log(res.affectedRows + " products updated!\n");
-			// Call deleteProduct AFTER the UPDATE completes
+			console.log("Items have been added!");
 		}
 	);
 
