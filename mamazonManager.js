@@ -35,11 +35,47 @@ function ask()
 	},
 	{
 		type: "input",
+		name: "newID",
+		message: "What is the new item's ID? (Please do not use the same ID as an existing product)",
+		when: function(answer)
+		{
+			return answer.action === "Add New Product";
+		}
+	},
+	{
+		type: "input",
+		name: "prodName",
+		message: "What is the new product's name?",
+		when: function(answer)
+		{
+			return answer.action === "Add New Product";
+		}
+	},
+	{
+		type: "input",
+		name: "depName",
+		message: "Which department does it belong to?",
+		when: function(answer)
+		{
+			return answer.action === "Add New Product";
+		}
+	},
+	{
+		type: "input",
+		name: "price",
+		message: "How much will it cost?",
+		when: function(answer)
+		{
+			return answer.action === "Add New Product";
+		}
+	},
+	{
+		type: "input",
 		name: "amountToAdd",
 		message: "How much would you like to add?",
 		when: function(answer)
 		{
-			return (answer.action === "Add to Inventory");
+			return (answer.action === "Add to Inventory" || answer.action === "Add New Product");
 		}
 	}
 	]).then(function(answer) {
@@ -73,14 +109,25 @@ function ask()
 					console.log("Please enter an amount that is greater than 0");
 				}
 			},500);
-
-
 		}
 		else if(answer.action === "Add New Product")
 		{
-
+			connection.query("SELECT * FROM products", function(err, res) {
+				if (err) throw err;
+				results = res;
+			});
+			setTimeout(function()
+			{
+				if(doesIDExist(answer.newID))
+				{
+					console.log("That ID already exists. Please choose a new ID. Click View All Products to see what already exists");
+				}
+				else if(!doesIDExist(answer.newID) && answer.price >= 0)
+				{
+					addNewProduct(answer.newID, answer.prodName, answer.depName, answer.price, answer.amountToAdd);
+				}
+			},500);
 		}
-			
 	});
 }
 
@@ -119,6 +166,23 @@ function addToInventory(amount, product)
 		}
 	);
 
+}
+function addNewProduct(id, prod_name, dep_name, price, quantity)
+{
+	console.log("Inserting a new product...\n");
+	var query = connection.query(
+		"INSERT INTO products SET ?",
+		{
+			item_id: id,
+			product_name: prod_name,
+			department_name: dep_name,
+			price: price,
+			stock_quantity: quantity
+		},
+		function(err, res) {
+			console.log("New item has been added!!! Click View All Products to see it!")
+		}
+	);
 }
 function doesIDExist(id)
 {
