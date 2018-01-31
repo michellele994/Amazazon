@@ -14,8 +14,6 @@ connection.connect(function(err) {
 	console.log("Howdy, valuable customer! Welcome to my shop.\n");
 	//read and print the products
 	readProducts();
-	//It seems to take a while for this to happen, so I have made the ask function appear after 1second, after the table appears.
-	setTimeout(function() {ask()},1000);
 });
 function ask()
 {
@@ -115,11 +113,12 @@ function updateProducts(itemID, locInArray, changeInQuantity)
 			});
 		})
 }
-function readProducts(type) {
+function readProducts() {
 	console.log("Selecting all products...\n");
 	connection.query("SELECT * FROM products", function(err, res) {
 		if (err) throw err;
 		printCustomerTable(res);
 		results = res;
+		ask();
 	});
 }

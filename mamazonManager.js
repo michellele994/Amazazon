@@ -34,15 +34,6 @@ function ask()
 	},
 	{
 		type: "input",
-		name: "newID",
-		message: "What is the new item's ID? (Please do not use the same ID as an existing product)",
-		when: function(answer)
-		{
-			return answer.action === "Add New Product";
-		}
-	},
-	{
-		type: "input",
 		name: "prodName",
 		message: "What is the new product's name?",
 		when: function(answer)
@@ -81,12 +72,10 @@ function ask()
 		if(answer.action === "View Products for Sale")
 		{
 			readProducts();
-			setTimeout(function(){ask()}, 500);
 		}
 		else if(answer.action === "View Low Inventory")
 		{
 			showLowInventory();
-			setTimeout(function(){ask()}, 500);
 		}
 		else if(answer.action === "Add to Inventory")
 		{
@@ -98,7 +87,6 @@ function ask()
 				if(doesIDExist(answer.selectToAdd) && answer.amountToAdd > 0 )
 				{
 					addToInventory(answer.amountToAdd, answer.selectToAdd);
-					setTimeout(function(){ask()}, 500);
 				}
 				else if(!doesIDExist(answer.selectToAdd))
 				{
@@ -118,13 +106,9 @@ function ask()
 			});
 			setTimeout(function()
 			{
-				if(doesIDExist(answer.newID))
+				if(answer.price >= 0)
 				{
-					console.log("That ID already exists. Please choose a new ID. Click View All Products to see what already exists");
-				}
-				else if(!doesIDExist(answer.newID) && answer.price >= 0)
-				{
-					addNewProduct(answer.newID, answer.prodName, answer.depName, answer.price, answer.amountToAdd);
+					addNewProduct(answer.prodName, answer.depName, answer.price, answer.amountToAdd);
 					setTimeout(function(){ask()}, 500);
 				}
 			},500);
@@ -137,7 +121,15 @@ function readProducts()
 	connection.query("SELECT * FROM products", function(err, res) {
 		if (err) throw err;
 		results = res;
-		console.table(results);
+		if(results.length === 0)
+		{
+			console.log("There are no products!! Add some! \n")
+		}
+		else
+		{
+			console.table(res);
+		}
+		ask();
 	});
 }
 function showLowInventory()
@@ -148,6 +140,7 @@ function showLowInventory()
 		if (err) throw err;
 		console.table(res);
 		results = res;
+		ask();
 	})
 }
 function addToInventory(amount, product)
@@ -161,18 +154,17 @@ function addToInventory(amount, product)
 		}
 	],
 		function(err, res) {
-			console.log("Items have been added!");
-
+			console.log("Items have been adsded!");
+			ask();
 		}
 	);
 }
-function addNewProduct(id, prod_name, dep_name, price, quantity)
+function addNewProduct(prod_name, dep_name, price, quantity)
 {
 	console.log("Inserting a new product...\n");
 	var query = connection.query(
 		"INSERT INTO products SET ?",
 		{
-			item_id: id,
 			product_name: prod_name,
 			department_name: dep_name,
 			price: price,
