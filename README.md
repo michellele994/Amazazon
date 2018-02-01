@@ -1,1 +1,1 @@
-# Mamazon
+# Amazazon
