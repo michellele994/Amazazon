@@ -127,7 +127,7 @@ function ask()
 function readProducts()
 {
 	console.log("Selecting all products...\n");
-	connection.query("SELECT * FROM products", function(err, res) {
+	connection.query("SELECT * FROM products GROUP BY department_name", function(err, res) {
 		if (err) throw err;
 		results = res;
 		if(results.length === 0)
@@ -144,19 +144,28 @@ function readProducts()
 function showLowInventory()
 {
 	console.log("Showing low inventory \n");
-	connection.query("SELECT * FROM products WHERE stock_quantity < 5",
-	function(err, res) {
-		if (err) throw err;
-		results = res;
-		if(results.length === 0)
+	connection.query("SELECT * FROM products", function(error, results) {
+		if (error) throw error;
+		if (results.length > 0)
 		{
-			console.log("There are no products!! Add some! \n")
+			connection.query("SELECT * FROM products WHERE stock_quantity < 5",
+			function(err, res) {
+				if (err) throw err;
+				if(res.length === 0)
+				{
+					console.log("There are no products in low inventory. \n")
+				}
+				else
+				{
+					console.table(res);
+				}
+				ask();
+			})
 		}
-		else
+		else if (results.length <=0)
 		{
-			console.table(results);
+			console.log("There no products at all. Add some!")
 		}
-		ask();
 	})
 }
 function addToInventory(amount, product)
