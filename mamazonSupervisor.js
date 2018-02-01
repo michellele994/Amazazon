@@ -71,7 +71,9 @@ function ask()
 }
 function readProducts() {
 	console.log("Selecting all products...\n");
-	connection.query("SELECT * FROM departments", function(err, res) {
+	connection.query("SELECT departments.*, SUM(product_sales) AS product_sales, SUM(product_sales-over_head_costs) AS total_profit " +
+		"FROM departments RIGHT JOIN products ON departments.department_name = products.department_name " +
+		"GROUP BY departments.department_name ORDER BY department_id", function(err, res) {
 		if (err) throw err;
 		results = res;
 		if(results.length === 0)

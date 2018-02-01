@@ -13,8 +13,9 @@ var connection = mysql.createConnection({
 connection.connect(function(err) {
 	if (err) throw err;
 	console.log("Howdy, boss!\n");
+	// displaySum();
 	departmentsAvailable();
-	ask();
+	// ask();
 });
 function ask() 
 {
@@ -127,7 +128,7 @@ function ask()
 function readProducts()
 {
 	console.log("Selecting all products...\n");
-	connection.query("SELECT * FROM products GROUP BY department_name", function(err, res) {
+	connection.query("SELECT * FROM products", function(err, res) {
 		if (err) throw err;
 		results = res;
 		if(results.length === 0)
@@ -222,6 +223,18 @@ function departmentsAvailable()
 			{
 				departments.push(res[i].department_name);
 			}
-			// ask();
+			ask();
 		});
 }
+
+// function displaySum()
+// {
+// 	var query = connection.query("SELECT departments.*, " + 
+// 		"SUM(product_sales) AS product_sales, SUM(product_sales-over_head_costs) AS total_profit " +
+// 		"FROM departments RIGHT JOIN products ON departments.department_name = products.department_name " +
+// 		"GROUP BY departments.department_name", function(err, res)
+// 	{
+// 		if(err) throw err;
+// 		console.table(res);
+// 	});
+// }
