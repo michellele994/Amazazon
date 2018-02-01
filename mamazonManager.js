@@ -40,7 +40,7 @@ function ask()
 		message: "What is the name of this new product?",
 		when: function(answer)
 		{
-			return answer.action === "Add New Product";
+			return (answer.action === "Add New Product" && departments.length !== 0);
 		}
 	},
 	{
@@ -50,7 +50,7 @@ function ask()
 		choices: departments,
 		when: function(answer)
 		{
-			return answer.action === "Add New Product";
+			return (answer.action === "Add New Product" && departments.length !== 0);
 		}
 	},
 	{
@@ -59,7 +59,7 @@ function ask()
 		message: "How much will it cost?",
 		when: function(answer)
 		{
-			return answer.action === "Add New Product";
+			return (answer.action === "Add New Product" && departments.length !== 0);
 		}
 	},
 	{
@@ -68,7 +68,7 @@ function ask()
 		message: "How much would you like to add?",
 		when: function(answer)
 		{
-			return (answer.action === "Add to Inventory" || answer.action === "Add New Product");
+			return (answer.action === "Add to Inventory" || (answer.action === "Add New Product" && departments.length !== 0));
 		}
 	}
 	]).then(function(answer) {
@@ -107,7 +107,12 @@ function ask()
 			connection.query("SELECT * FROM products", function(err, res) {
 				if (err) throw err;
 				results = res;
-				if(answer.price >= 0)
+				if (departments.length === 0)
+				{
+					console.log("There are no current departments to add your products to. Please ask your Supervisor to add a department before adding products");
+					connection.end();
+				}
+				else if(answer.price >= 0)
 				{
 					addNewProduct(answer.prodName, answer.depName, answer.price, answer.amountToAdd);
 				}
