@@ -2,6 +2,7 @@ var inquirer = require("inquirer");
 var consoleTable = require("console.table");
 var mysql = require("mysql");
 var results;
+var departments = [];
 var connection = mysql.createConnection({
 	host: "localhost",
 	port: 3306,
@@ -12,6 +13,7 @@ var connection = mysql.createConnection({
 connection.connect(function(err) {
 	if (err) throw err;
 	console.log("Howdy, boss!\n");
+	departmentsAvailable();
 	ask();
 });
 function ask() 
@@ -35,16 +37,17 @@ function ask()
 	{
 		type: "input",
 		name: "prodName",
-		message: "What is the new product's name?",
+		message: "What is the name of this new product?",
 		when: function(answer)
 		{
 			return answer.action === "Add New Product";
 		}
 	},
 	{
-		type: "input",
+		type: "list",
 		name: "depName",
 		message: "Which department does it belong to?",
+		choices: departments,
 		when: function(answer)
 		{
 			return answer.action === "Add New Product";
@@ -82,8 +85,7 @@ function ask()
 			connection.query("SELECT * FROM products", function(err, res) {
 				if (err) throw err;
 				results = res;
-			});
-			setTimeout(function(){
+
 				if(doesIDExist(answer.selectToAdd) && answer.amountToAdd > 0 )
 				{
 					addToInventory(answer.amountToAdd, answer.selectToAdd);
@@ -91,27 +93,29 @@ function ask()
 				else if(!doesIDExist(answer.selectToAdd))
 				{
 					console.log("That item ID currently does not exist. Click 'Add New Product' if you want to add something that doesn't currently exist");
+					connection.end();
 				}
 				else if (answer.amountToAdd <= 0)
 				{
 					console.log("Please enter an amount that is greater than 0");
+					connection.end();
 				}
-			},500);
+			});
 		}
 		else if(answer.action === "Add New Product")
 		{
 			connection.query("SELECT * FROM products", function(err, res) {
 				if (err) throw err;
 				results = res;
-			});
-			setTimeout(function()
-			{
 				if(answer.price >= 0)
 				{
 					addNewProduct(answer.prodName, answer.depName, answer.price, answer.amountToAdd);
-					setTimeout(function(){ask()}, 500);
 				}
-			},500);
+			});
+		}
+		else if (answer.action === "Exit")
+		{
+			connection.end();
 		}
 	});
 }
@@ -134,12 +138,19 @@ function readProducts()
 }
 function showLowInventory()
 {
-	console.log("Showing low inventory");
+	console.log("Showing low inventory \n");
 	connection.query("SELECT * FROM products WHERE stock_quantity < 5",
 	function(err, res) {
 		if (err) throw err;
-		console.table(res);
 		results = res;
+		if(results.length === 0)
+		{
+			console.log("There are no products!! Add some! \n")
+		}
+		else
+		{
+			console.table(results);
+		}
 		ask();
 	})
 }
@@ -154,7 +165,7 @@ function addToInventory(amount, product)
 		}
 	],
 		function(err, res) {
-			console.log("Items have been adsded!");
+			console.log("Items have been added!");
 			ask();
 		}
 	);
@@ -172,7 +183,8 @@ function addNewProduct(prod_name, dep_name, price, quantity)
 			product_sales : 0
 		},
 		function(err, res) {
-			console.log("New item has been added!!! Click View All Products to see it!")
+			console.log("New item has been added!!! Click View All Products to see it!\n")
+			ask();
 		}
 	);
 }
@@ -186,4 +198,16 @@ function doesIDExist(id)
 			break;
 		}
 	}
+}
+function departmentsAvailable()
+{
+	var query = connection.query(
+		"SELECT * FROM departments", function (err, res) {
+			if(err) throw err;
+			for (var i = 0; i < res.length; i++)
+			{
+				departments.push(res[i].department_name);
+			}
+			// ask();
+		});
 }

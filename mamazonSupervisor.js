@@ -22,7 +22,7 @@ function ask()
 			type: "list",
 			name: "action",
 			message: "What would you like to do today?",
-			choices: ["View Product Sales by Department", "Create New Department"]
+			choices: ["View Product Sales by Department", "Create New Department", "Exit"]
 		},
 		{
 			type: "input",
@@ -51,19 +51,21 @@ function ask()
 				connection.query("SELECT * FROM departments", function(err, res) {
 					if (err) throw err;
 					results = res;
-				});
-				setTimeout(function()
-				{
 					if(doesDepartmentExist(answer.depName))
 					{
-						console.log("That department name already exists. Please choose a new name.");
+						console.log("\nThat department name already exists. Please choose a new name.\n");
+						ask();
 					}
 					else if(!doesDepartmentExist(answer.depName))
 					{
 						console.log("Adding new department");
 						addNewDepartment(answer.depName, answer.depCost);
 					}
-				},500);
+				});
+			}
+			else if(answer.action === "Exit")
+			{
+				connection.end();
 			}
 		});
 }
@@ -74,12 +76,13 @@ function readProducts() {
 		results = res;
 		if(results.length === 0)
 		{
-			console.log("There are no departments!")
+			console.log("There are no departments! Add some!")
 		}
 		else
 		{
 			console.table(res);
 		}
+		ask();
 	});
 }
 function addNewDepartment(depName, depCost)
@@ -92,7 +95,8 @@ function addNewDepartment(depName, depCost)
 			over_head_costs: depCost
 		},
 		function(err, res) {
-			console.log("New item has been added!!! Click View All Products to see it!")
+			console.log("New department has been added!!!")
+			ask();
 		}
 	);
 }

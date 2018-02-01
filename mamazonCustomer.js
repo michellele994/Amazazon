@@ -97,7 +97,7 @@ function updateProducts(itemID, locInArray, changeInQuantity)
 				if (err) throw err;
 				results = res;
 			});
-			console.log("You got it! Your total purchase was $" + (results[locInArray].price*changeInQuantity) + " dollars");
+			console.log("You got it! Your total purchase was $" + (results[locInArray].price*changeInQuantity) + " dollar(s).");
 			console.log("Thank you for shopping with Mamazon!");
 		}
 	);
@@ -110,6 +110,7 @@ function updateProducts(itemID, locInArray, changeInQuantity)
 			connection.query("SELECT * FROM products", function(err, res) {
 				if (err) throw err;
 				results = res;
+				connection.end();
 			});
 		})
 }
@@ -117,8 +118,48 @@ function readProducts() {
 	console.log("Selecting all products...\n");
 	connection.query("SELECT * FROM products", function(err, res) {
 		if (err) throw err;
-		printCustomerTable(res);
+		var stockAvail = false;
+
 		results = res;
-		ask();
+		for (var i = 0; i < results.length; i++)
+		{
+			if (results[i].stock_quantity > 0)
+			{
+				stockAvail=true;
+				break;
+			}
+		}
+
+		if (results.length === 0)
+		{
+			console.log("It looks like we don't have anything to sell to you at this time. Please come back later!")
+			connection.end();
+		}
+		else if (results.length > 0 && !stockAvail)
+		{
+			console.log("We are sold out! Please come again later");
+			connection.end();
+		}
+		else if (results.length > 0 && stockAvail)
+		{
+			printCustomerTable(res);
+			ask();
+		}
 	});
 }
+
+// function isThereStockLeft()
+// {
+// 	connection.query("SELECT * FROM products", function(err, res){
+// 		if (err) throw err;
+// 		for (var i = 0; i < res.length; i++)
+// 		{
+// 			if (res[i].stock_quantity > 0)
+// 			{
+// 				return true;
+// 				break;
+// 			}
+// 		}
+// 		return false;
+// 	})
+// }
