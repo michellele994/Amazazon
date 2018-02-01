@@ -11,7 +11,7 @@ var connection = mysql.createConnection({
 });
 connection.connect(function(err) {
 	if (err) throw err;
-	console.log("Hiya big boss!\n");
+	console.log("\nHiya big boss!\n");
 	ask();
 });
 
@@ -21,7 +21,7 @@ function ask()
 		{
 			type: "list",
 			name: "action",
-			message: "What would you like to do today?",
+			message: "Choose what you would like to do.",
 			choices: ["View Product Sales by Department", "Create New Department", "Exit"]
 		},
 		{
@@ -36,7 +36,7 @@ function ask()
 		{
 			type: "input",
 			name: "depCost",
-			message: "How much did this whole department cost?",
+			message: "What is the over head cost for this department?",
 			when: function(answer)
 			{
 				return answer.action === "Create New Department";
@@ -44,7 +44,7 @@ function ask()
 		}]).then(function(answer) {
 			if(answer.action === "View Product Sales by Department")
 			{
-				readProducts();
+				readDepartments();
 			}
 			else if(answer.action === "Create New Department")
 			{
@@ -53,32 +53,34 @@ function ask()
 					results = res;
 					if(doesDepartmentExist(answer.depName))
 					{
-						console.log("\nThat department name already exists. Please choose a new name.\n");
+						cl("\nThat department name already exists. Please choose a new name.\n");
 						ask();
 					}
 					else if(!doesDepartmentExist(answer.depName))
 					{
-						console.log("Adding new department");
 						addNewDepartment(answer.depName, answer.depCost);
 					}
 				});
 			}
 			else if(answer.action === "Exit")
 			{
+				cl("See you later, big boss!")
 				connection.end();
 			}
 		});
 }
-function readProducts() {
-	console.log("Selecting all products...\n");
-	connection.query("SELECT departments.*, SUM(product_sales) AS product_sales, SUM(product_sales-over_head_costs) AS total_profit " +
+function readDepartments() {
+	console.log("\nHere are the departments...\n");
+	connection.query("SELECT departments.*, SUM(product_sales) AS product_sales, SUM(products.product_sales) - departments.over_head_costs AS total_profit " +
 		"FROM departments RIGHT JOIN products ON departments.department_name = products.department_name " +
 		"GROUP BY departments.department_name ORDER BY department_id", function(err, res) {
 		if (err) throw err;
 		results = res;
 		if(results.length === 0)
 		{
-			console.log("There are no departments! Add some!")
+			cl("Heya Big Boss, looks like there are no departments. Let's add one.\n" +
+				"If you had already created a department, there might be no products it.\n" +
+				"Check with bos-- I mean, the store manager.");
 		}
 		else
 		{
@@ -89,7 +91,7 @@ function readProducts() {
 }
 function addNewDepartment(depName, depCost)
 {
-	console.log("Inserting a new department...\n");
+	console.log("\nAdding a new department...\n");
 	var query = connection.query(
 		"INSERT INTO departments SET ?",
 		{
@@ -97,7 +99,7 @@ function addNewDepartment(depName, depCost)
 			over_head_costs: depCost
 		},
 		function(err, res) {
-			console.log("New department has been added!!!")
+			cl("New department has been added!!!")
 			ask();
 		}
 	);
@@ -123,4 +125,8 @@ function doesDepartmentExist(departmentName)
 			break
 		}
 	}
+}
+function cl(string)
+{
+	console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n"+string+"\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 }

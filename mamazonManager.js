@@ -12,10 +12,8 @@ var connection = mysql.createConnection({
 });
 connection.connect(function(err) {
 	if (err) throw err;
-	console.log("Howdy, boss!\n");
-	// displaySum();
+	console.log("\nHowdy, boss!\n");
 	departmentsAvailable();
-	// ask();
 });
 function ask() 
 {
@@ -23,7 +21,7 @@ function ask()
 	{
 		type: "list",
 		name: "action",
-		message: "What would you like to do?",
+		message: "Choose what you would like to do.",
 		choices: ["View Products for Sale","View Low Inventory","Add to Inventory", "Add New Product", "Exit"]
 	},
 	{
@@ -32,7 +30,7 @@ function ask()
 		message: "Type the item ID of the item you wish to update.",
 		when: function(answer)
 		{
-			return answer.action === "Add to Inventory";
+				return (answer.action === "Add to Inventory");
 		}
 	},
 	{
@@ -69,7 +67,7 @@ function ask()
 		message: "How much would you like to add?",
 		when: function(answer)
 		{
-			return (answer.action === "Add to Inventory" || (answer.action === "Add New Product" && departments.length !== 0));
+			return((answer.action === "Add New Product" && departments.length !== 0) || answer.action === "Add to Inventory")
 		}
 	}
 	]).then(function(answer) {
@@ -91,15 +89,20 @@ function ask()
 				{
 					addToInventory(answer.amountToAdd, answer.selectToAdd);
 				}
-				else if(!doesIDExist(answer.selectToAdd))
+				else if(results.length <= 0)
 				{
-					console.log("That item ID currently does not exist. Click 'Add New Product' if you want to add something that doesn't currently exist");
-					connection.end();
+					cl("Boss! It looks like we don't have any products at all. Maybe you should add some!");
+					ask();
 				}
-				else if (answer.amountToAdd <= 0)
+				else if(!doesIDExist(answer.selectToAdd) && results.length > 0)
 				{
-					console.log("Please enter an amount that is greater than 0");
-					connection.end();
+					cl("That item ID currently does not exist, boss! Try again later.");
+					ask();
+				}
+				else if (answer.amountToAdd <= 0 && results.length > 0)
+				{
+					cl("Boss, you are confusing me. Please be more clear. Let's try this again.");
+					ask();
 				}
 			});
 		}
@@ -110,10 +113,15 @@ function ask()
 				results = res;
 				if (departments.length === 0)
 				{
-					console.log("There are no current departments to add your products to. Please ask your Supervisor to add a department before adding products");
+					cl("Boss, there doesn't seem to be any departments open. Can you ask Big Boss about adding some departments?");
 					connection.end();
 				}
-				else if(answer.price >= 0)
+				else if(answer.price < 0 || answer.amountToAdd <= 0)
+				{
+					cl("Boss, you are confusing me. Please be more clear. Let's try this again.");
+					ask();
+				}
+				else if(answer.price >= 0 && answer.amountToAdd > 0)
 				{
 					addNewProduct(answer.prodName, answer.depName, answer.price, answer.amountToAdd);
 				}
@@ -121,19 +129,32 @@ function ask()
 		}
 		else if (answer.action === "Exit")
 		{
+			cl("See you later, boss!")
 			connection.end();
 		}
 	});
 }
+function departmentsAvailable()
+{
+	var query = connection.query(
+		"SELECT * FROM departments", function (err, res) {
+			if(err) throw err;
+			for (var i = 0; i < res.length; i++)
+			{
+				departments.push(res[i].department_name);
+			}
+			ask();
+		});
+}
 function readProducts()
 {
-	console.log("Selecting all products...\n");
+	console.log("\nHere's what we have...\n");
 	connection.query("SELECT * FROM products", function(err, res) {
 		if (err) throw err;
 		results = res;
 		if(results.length === 0)
 		{
-			console.log("There are no products!! Add some! \n")
+			cl("Boss! It looks like we don't have anything at all. Maybe you should add some!");
 		}
 		else
 		{
@@ -144,7 +165,7 @@ function readProducts()
 }
 function showLowInventory()
 {
-	console.log("Showing low inventory \n");
+	console.log("\nHere are the items that are low in stock... \n");
 	connection.query("SELECT * FROM products", function(error, results) {
 		if (error) throw error;
 		if (results.length > 0)
@@ -154,7 +175,7 @@ function showLowInventory()
 				if (err) throw err;
 				if(res.length === 0)
 				{
-					console.log("There are no products in low inventory. \n")
+					cl("We are adequately stocked, boss!")
 				}
 				else
 				{
@@ -165,13 +186,14 @@ function showLowInventory()
 		}
 		else if (results.length <=0)
 		{
-			console.log("There no products at all. Add some!")
+			cl("Boss! It looks like we don't have anything at all. Maybe you should add some!");
+			ask();
 		}
 	})
 }
 function addToInventory(amount, product)
 {
-	console.log("Adding to inventory");
+	console.log("\nAdding to inventory...\n");
 	var query = connection.query(
 	"UPDATE products SET stock_quantity = stock_quantity +" +amount+"  WHERE ?",
 	[
@@ -180,14 +202,14 @@ function addToInventory(amount, product)
 		}
 	],
 		function(err, res) {
-			console.log("Items have been added!");
+			cl("Items have been added!");
 			ask();
 		}
 	);
 }
 function addNewProduct(prod_name, dep_name, price, quantity)
 {
-	console.log("Inserting a new product...\n");
+	console.log("\nInserting a new product...\n");
 	var query = connection.query(
 		"INSERT INTO products SET ?",
 		{
@@ -198,7 +220,7 @@ function addNewProduct(prod_name, dep_name, price, quantity)
 			product_sales : 0
 		},
 		function(err, res) {
-			console.log("New item has been added!!! Click View All Products to see it!\n")
+			cl("New item has been added!!!")
 			ask();
 		}
 	);
@@ -214,27 +236,7 @@ function doesIDExist(id)
 		}
 	}
 }
-function departmentsAvailable()
+function cl(string)
 {
-	var query = connection.query(
-		"SELECT * FROM departments", function (err, res) {
-			if(err) throw err;
-			for (var i = 0; i < res.length; i++)
-			{
-				departments.push(res[i].department_name);
-			}
-			ask();
-		});
+	console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n"+string+"\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 }
-
-// function displaySum()
-// {
-// 	var query = connection.query("SELECT departments.*, " + 
-// 		"SUM(product_sales) AS product_sales, SUM(product_sales-over_head_costs) AS total_profit " +
-// 		"FROM departments RIGHT JOIN products ON departments.department_name = products.department_name " +
-// 		"GROUP BY departments.department_name", function(err, res)
-// 	{
-// 		if(err) throw err;
-// 		console.table(res);
-// 	});
-// }

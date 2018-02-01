@@ -11,111 +11,88 @@ var connection = mysql.createConnection({
 });
 connection.connect(function(err) {
 	if (err) throw err;
-	console.log("Howdy, valuable customer! Welcome to my shop.\n");
-	//read and print the products
+	console.log("\nHowdy, valuable customer! Welcome to my shop.\n");
 	readProducts();
 });
 function ask()
 {
 	inquirer.prompt([
 			{
+				type: "confirm",
+				name: "confirm",
+				message: "Would you like to buy something?",
+				default: true
+			},
+			{
 				type: "input",
 				name: "id",
-				message: "What is the ID of the item that you would like to purchase?"
+				message: "What is the ID of the item that you would like to purchase?",
+				when: function(answer)
+				{
+					return answer.confirm === true;
+				}
 			},
 			{
 				type: "input",
 				name: "quantity",
-				message: "How much of it would you like to buy?"
+				message: "How much of it would you like to buy?",
+				when: function(answer)
+				{
+					return answer.confirm === true;
+				}
 			}
 		]).then(function(answer) {
 			var location = null;
-			if(doesIDExist() && location !== null)
+			if (answer.confirm)
 			{
-				if(answer.quantity > 0)
+				if(doesIDExist() && location !== null)
 				{
-					if (answer.quantity <= results[location].stock_quantity)
+					if(answer.quantity > 0)
 					{
-						updateProducts(answer.id, location, answer.quantity)
+						if (answer.quantity <= results[location].stock_quantity)
+						{
+							updateProducts(answer.id, location, answer.quantity)
+						}
+						else
+						{
+							cl("I don't think we have enough of that. Come back later!");
+							connection.end();
+						}
 					}
 					else
 					{
-						console.log("I don't think we have enough of that. Come back later!");
+						cl("I cannot read very well. Please use easy-to-read numbers");
+						ask();
 					}
 				}
 				else
 				{
-					console.log("I cannot read. Please use easy-to-read numbers");
+					cl("Sorry, I don't think we have any of that in stock. Try again later!")
+					connection.end();
+
+				}
+				function doesIDExist()
+				{
+					for (var i = 0; i < results.length; i++)
+					{
+						if(answer.id == results[i].item_id)
+						{
+							location = i;
+							return true;
+							break;
+						}
+					}
 				}
 			}
 			else
 			{
-				console.log("Sorry, I don't think we have any of that in stock. Try again!")
-			}
-			function doesIDExist()
-			{
-				for (var i = 0; i < results.length; i++)
-				{
-					if(answer.id == results[i].item_id)
-					{
-						location = i;
-						return true;
-						break;
-					}
-				}
+				cl("Okay, well come back when you want to buy something!");
+				connection.end();
 			}
 		});
 }
-function printCustomerTable(allProducts)
-{
-	var custAllProds = [];
-
-	for (var i = 0; i < allProducts.length; i++)
-	{
-		var product = {
-			item_id: allProducts[i].item_id,
-			product_name: allProducts[i].product_name,
-			department_name: allProducts[i].department_name,
-			price: allProducts[i].price
-		}
-		custAllProds.push(product);
-	}
-	console.table(custAllProds);
-}
-function updateProducts(itemID, locInArray, changeInQuantity)
-{
-	console.log("Processing you request...\n");
-	var query = connection.query(
-		"UPDATE products SET stock_quantity = stock_quantity-"+changeInQuantity+" WHERE ?",
-		[
-			{
-				item_id: itemID
-			}
-		],
-		function(err, res) {
-			connection.query("SELECT * FROM products", function(err, res) {
-				if (err) throw err;
-				results = res;
-			});
-			console.log("You got it! Your total purchase was $" + (results[locInArray].price*changeInQuantity) + " dollar(s).");
-			console.log("Thank you for shopping with Mamazon!");
-		}
-	);
-	var query = connection.query(
-		"UPDATE products SET product_sales = product_sales+"+results[locInArray].price*changeInQuantity+" WHERE ?",
-		[{
-			item_id: itemID
-		}],
-		function(err, res){
-			connection.query("SELECT * FROM products", function(err, res) {
-				if (err) throw err;
-				results = res;
-				connection.end();
-			});
-		})
-}
 function readProducts() {
-	console.log("Selecting all products...\n");
+	console.log("\nHere's what we have...\n");
 	connection.query("SELECT * FROM products", function(err, res) {
 		if (err) throw err;
 		var stockAvail = false;
@@ -132,12 +109,12 @@ function readProducts() {
 
 		if (results.length === 0)
 		{
-			console.log("It looks like we don't have anything to sell to you at this time. Please come back later!")
+			cl("It looks like we don't have anything to sell to you at this time. Please come back later!")
 			connection.end();
 		}
 		else if (results.length > 0 && !stockAvail)
 		{
-			console.log("We are sold out! Please come again later");
+			cl("We are sold out! Please come again later");
 			connection.end();
 		}
 		else if (results.length > 0 && stockAvail)
@@ -147,19 +124,55 @@ function readProducts() {
 		}
 	});
 }
+function printCustomerTable(allProducts)
+{
+	var custAllProds = [];
+	for (var i = 0; i < allProducts.length; i++)
+	{
+		var product = {
+			item_id: allProducts[i].item_id,
+			product_name: allProducts[i].product_name,
+			department_name: allProducts[i].department_name,
+			price: allProducts[i].price
+		}
+		custAllProds.push(product);
+	}
+	console.table(custAllProds);
+}
+function updateProducts(itemID, locInArray, changeInQuantity)
+{
+	console.log("\nProcessing you request...\n");
+	var query = connection.query(
+		"UPDATE products SET stock_quantity = stock_quantity-"+changeInQuantity+" WHERE ?",
+		[
+			{
+				item_id: itemID
+			}
+		],
+		function(err, res) {
+			connection.query("SELECT * FROM products", function(err, res) {
+				if (err) throw err;
+				results = res;
+			});
+			cl("You got it! Your total purchase was $" + (results[locInArray].price*changeInQuantity) + " dollar(s).\nThank you for shopping with Mamazon!");
+		}
+	);
+	var query = connection.query(
+		"UPDATE products SET product_sales = product_sales+"+results[locInArray].price*changeInQuantity+" WHERE ?",
+		[{
+			item_id: itemID
+		}],
+		function(err, res){
+			connection.query("SELECT * FROM products", function(err, res) {
+				if (err) throw err;
+				results = res;
+				connection.end();
+			});
+		}
+	);
+}
 
-// function isThereStockLeft()
-// {
-// 	connection.query("SELECT * FROM products", function(err, res){
-// 		if (err) throw err;
-// 		for (var i = 0; i < res.length; i++)
-// 		{
-// 			if (res[i].stock_quantity > 0)
-// 			{
-// 				return true;
-// 				break;
-// 			}
-// 		}
-// 		return false;
-// 	})
-// }
+function cl(string)
+{
+	console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n"+string+"\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+}
