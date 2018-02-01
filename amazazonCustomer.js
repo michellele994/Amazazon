@@ -159,7 +159,7 @@ function updateProducts(itemID, locInArray, changeInQuantity)
 				if (err) throw err;
 				results = res;
 			});
-			cl("You got it! Your total purchase was $" + (results[locInArray].price*changeInQuantity) + " dollar(s).\nThank you for shopping with Mamazon!");
+			cl("You got it! Your total purchase was $" + (results[locInArray].price*changeInQuantity) + " dollar(s).\nThank you for shopping with Amazazon!");
 		}
 	);
 	//Change the product sales to reflect how much money the store has made for the product in total.
