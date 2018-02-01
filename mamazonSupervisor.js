@@ -51,6 +51,7 @@ function ask()
 				connection.query("SELECT * FROM departments", function(err, res) {
 					if (err) throw err;
 					results = res;
+					//Checks to see if department already exists
 					if(doesDepartmentExist(answer.depName))
 					{
 						cl("\nThat department name already exists. Please choose a new name.\n");
@@ -71,6 +72,7 @@ function ask()
 }
 function readDepartments() {
 	console.log("\nHere are the departments...\n");
+	//This here shows the table per the requirements of the homework instructions
 	connection.query("SELECT departments.*, SUM(product_sales) AS product_sales, SUM(products.product_sales) - departments.over_head_costs AS total_profit " +
 		"FROM departments RIGHT JOIN products ON departments.department_name = products.department_name " +
 		"GROUP BY departments.department_name ORDER BY department_id", function(err, res) {

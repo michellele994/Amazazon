@@ -13,6 +13,7 @@ var connection = mysql.createConnection({
 connection.connect(function(err) {
 	if (err) throw err;
 	console.log("\nHowdy, boss!\n");
+	//when initiated, this checks departments table to prepare for inquirer, as an array from this function will be used as choices.
 	departmentsAvailable();
 });
 function ask() 
@@ -111,19 +112,29 @@ function ask()
 			connection.query("SELECT * FROM products", function(err, res) {
 				if (err) throw err;
 				results = res;
-				if (departments.length === 0)
+				//If the product name does not already exist.
+				if(!doesProductExist(answer.prodName))
 				{
-					cl("Boss, there doesn't seem to be any departments open. Can you ask Big Boss about adding some departments?");
-					connection.end();
+
+					if (departments.length === 0)
+					{
+						cl("Boss, there doesn't seem to be any departments open. Can you ask Big Boss about adding some departments?");
+						connection.end();
+					}
+					else if(answer.price < 0 || answer.amountToAdd <= 0)
+					{
+						cl("Boss, you are confusing me. Please be more clear. Let's try this again.");
+						ask();
+					}
+					else if(answer.price >= 0 && answer.amountToAdd > 0)
+					{
+						addNewProduct(answer.prodName, answer.depName, answer.price, answer.amountToAdd);
+					}
 				}
-				else if(answer.price < 0 || answer.amountToAdd <= 0)
+				else if (doesProductExist(answer.prodName))
 				{
-					cl("Boss, you are confusing me. Please be more clear. Let's try this again.");
+					cl("Boss, you already have a product with this name. Let's do something else");
 					ask();
-				}
-				else if(answer.price >= 0 && answer.amountToAdd > 0)
-				{
-					addNewProduct(answer.prodName, answer.depName, answer.price, answer.amountToAdd);
 				}
 			});
 		}
@@ -225,6 +236,7 @@ function addNewProduct(prod_name, dep_name, price, quantity)
 		}
 	);
 }
+//To determine in an ID exists
 function doesIDExist(id)
 {
 	for (var i = 0; i < results.length; i++)
@@ -236,6 +248,19 @@ function doesIDExist(id)
 		}
 	}
 }
+//To determine if product already exists
+function doesProductExist(productName)
+{
+	for (var i = 0; i < results.length; i++)
+	{
+		if(productName.toUpperCase() === results[i].product_name.toUpperCase())
+		{
+			return true;
+			break
+		}
+	}
+}
+//To prettify things
 function cl(string)
 {
 	console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n"+string+"\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");

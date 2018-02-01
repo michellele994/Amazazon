@@ -12,6 +12,7 @@ var connection = mysql.createConnection({
 connection.connect(function(err) {
 	if (err) throw err;
 	console.log("\nHowdy, valuable customer! Welcome to my shop.\n");
+	//Upon connection, display the table
 	readProducts();
 });
 function ask()
@@ -42,6 +43,7 @@ function ask()
 				}
 			}
 		]).then(function(answer) {
+			//location is used later to determine where in the array the item is placed, as itemID may not be reliable.
 			var location = null;
 			if (answer.confirm)
 			{
@@ -95,8 +97,8 @@ function readProducts() {
 	console.log("\nHere's what we have...\n");
 	connection.query("SELECT * FROM products", function(err, res) {
 		if (err) throw err;
+		//stockAvail is used to check if there is any stock to start with.
 		var stockAvail = false;
-
 		results = res;
 		for (var i = 0; i < results.length; i++)
 		{
@@ -106,12 +108,13 @@ function readProducts() {
 				break;
 			}
 		}
-
+		//If there is nothing in products, then relay that information to the customer.
 		if (results.length === 0)
 		{
 			cl("It looks like we don't have anything to sell to you at this time. Please come back later!")
 			connection.end();
 		}
+		//If there are items in the products table but stocks are all empty, then relay the information to the customer.
 		else if (results.length > 0 && !stockAvail)
 		{
 			cl("We are sold out! Please come again later");
@@ -124,6 +127,7 @@ function readProducts() {
 		}
 	});
 }
+//This function is used to only display the products without stock information, per assignment request.
 function printCustomerTable(allProducts)
 {
 	var custAllProds = [];
@@ -142,6 +146,7 @@ function printCustomerTable(allProducts)
 function updateProducts(itemID, locInArray, changeInQuantity)
 {
 	console.log("\nProcessing you request...\n");
+	//Change the stock quantity to match how much the customer had bought
 	var query = connection.query(
 		"UPDATE products SET stock_quantity = stock_quantity-"+changeInQuantity+" WHERE ?",
 		[
@@ -157,6 +162,7 @@ function updateProducts(itemID, locInArray, changeInQuantity)
 			cl("You got it! Your total purchase was $" + (results[locInArray].price*changeInQuantity) + " dollar(s).\nThank you for shopping with Mamazon!");
 		}
 	);
+	//Change the product sales to reflect how much money the store has made for the product in total.
 	var query = connection.query(
 		"UPDATE products SET product_sales = product_sales+"+results[locInArray].price*changeInQuantity+" WHERE ?",
 		[{
@@ -171,7 +177,7 @@ function updateProducts(itemID, locInArray, changeInQuantity)
 		}
 	);
 }
-
+//To prettify everything.
 function cl(string)
 {
 	console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n"+string+"\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
