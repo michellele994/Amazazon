@@ -14,7 +14,7 @@
 ### Supervisor View
 amazazonSupervisor.js
 
-* Because the app starts off with empty tables, the app should start with the creation of a department. At this time, the **Customer** and the **Manager** is unable to perform any action nor view any table due to the lack of departments (See video).
+* Because the app starts off with empty tables, the app should start with the creation of a department. At this time, the **Customer** and the **Manager** is unable to perform any action nor view any table due to the lack of departments (See video https://www.youtube.com/watch?v=09OcsVkMcEg&feature=youtu.be).
 * When creating a department, the Supervisor will be asked to provide the department_name and over_head_costs. *Currently the app does not calculate overhead costs per product, although this may be adjusted in the future*.
 * After a department is created and products have been added, the Supervisor is able to view the department table along with total product_sales and total_profit, so that the supervisor can see how much money is being made per department at ease.
 
