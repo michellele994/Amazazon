@@ -35,6 +35,66 @@ amazazonCustomer.js
 	* If there is enough in stock to fulfill quantity asked for, the tables will be updated for the Manager and Supervisor view. 
 	* If there is not enough in stock, the customer will be asked to come back later when there is more.
 
+## Running the application locally
+ 1. Clone the repository using the link under "Live Demonstration" below.
+ 2. Once cloned, install all the dependencies using the following command
+    ```
+    npm install
+    ```
+ 3. After installing the dependencies, run the create database and tables code provided in amazazon.sql.
+ 4. Now you are ready to use the application!
+ ### To use customer's view
+ 1. Run the command:
+ ```
+ node amazazonCustomer.js
+ ```
+ 2. A table of the store's products should be presented thanks to npm package console.table if there are products available. If there are no products available, a message will appear letting the customer know and asking them to come back later.
+ 3. If there are products in the store, then the customer will also be prompted with questions, starting with if a person is interested in buying anything from the store
+	* If a person is interested in buying something from the store, they are then prompted to enter the ID and quantity of the product.
+		* This app controls for if the product does not exist or does not have enough in stock! If there are enough in stock, the amount is then decreased from the stock and a message is shown letting the customer know how much they have spent on the item.
+ ### To use the manager's view
+ 1. Run the command:
+ ```
+ node amazazonManager.js
+ ```
+ 2. The app will initially prompt the manager to choose from a list of actions such as
+ ```
+ > View Products for Sale
+   View Low Inventory
+   Add to Inventory
+   Add New Product
+   Exit
+ ```
+ #### Viewing Products for Sale
+ When this is chosen, a table is shown showing item id, product name, department name, price, stock quantity, and amount of product sales.
+ #### View Low Inventory
+ When this is chosen, a table is shown showing items with the stock quantity of amount less than 5.
+ #### Add to Inventory
+ When this is chosen, a series of questions will be asked to assist the manager in updating the stock quantity of an existing item.
+ #### Add New Product
+ When this is chsoen, a series of questions willbe asked to assist the manager in adding products within available departments.
+ #### Exit
+ When this is chosen, the app ends.
+
+ ### To use the supervisor's view
+ 1. Run the command: 
+ ```
+ node amazazonSupervisor.js
+ ```
+ 2. The app will initially prompt the manager to choose from a list of actions such as
+ ```
+ > View Product Sales by Department
+   Create New Department
+   Exit
+ ```
+ #### View Product Sales by Department
+ When this is chosen, a table is shown displaying all the departments of the store including department id number, department name, overhead costs, amount of product sales, and total profit.
+ #### Create New Department
+ When this is chosen, the supervisor will be prompted with questions that will assist them in creating this new department.
+ After this department is created, a manager will be able to add products into the department.
+
+## Live Demonsration
+This application is not hosted on the web. Please clone the repository [here](https://github.com/michellele994/Amazazon) and follow the instructions above.
 #### Thank you!
 Michelle Le (c) 2018
 
